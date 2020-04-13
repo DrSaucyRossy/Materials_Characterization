@@ -10,12 +10,12 @@ from cmath import exp, pi
 
 import numpy as np
 import pandas as pd
-
+import matplotlib.pyplot as plt
 
 #refractive indices
 def Intensity(n1,wavelength, dielectric_thickness):
     n0 = 1 # air
-    n2 = 1.77 #Al203
+    n2 = 1.641 #Al203
     n3 = 5.6-0.4j #Silicon
 
     d1 = 0.34 #single layer graphene thickness in nm
@@ -25,9 +25,9 @@ def Intensity(n1,wavelength, dielectric_thickness):
     phi2= 2*pi*n2*d2/wavelength
     
     e1 = exp(1j*(phi1+phi2))
-    e2 = exp(1j*(phi1-phi2))
+    e2 = exp(-1j*(phi1-phi2))
     e3 = exp(-1j*(phi1+phi2))
-    e4 = exp(-1j*(phi1-phi2))
+    e4 = exp(1j*(phi1-phi2))
 
     #relative indices of refraction
     r1 = (n0-n1)/(n0+n1)
@@ -48,9 +48,9 @@ n1air = 1
 
 
 ''' Wavelength range'''
-wavelength_data_points = 110
-wavelength_start = 300
-wavelength_finish = 630
+wavelength_data_points = 340
+wavelength_start = 400
+wavelength_finish = 740
 wavelength_step = (wavelength_finish-wavelength_start)/wavelength_data_points
 wavelength = []
 
@@ -65,8 +65,9 @@ wavelengths = np.arange(wavelength_start,wavelength_finish+wavelength_step,wavel
 
 '''Dielectric_Thickness Range'''
 
-dielectric_thickness_data_points= 100
-dielectric_thickness_start= 50
+
+dielectric_thickness_data_points= 545
+dielectric_thickness_start= 5
 dielectric_thickness_finish= 550
 dielectric_step = (dielectric_thickness_finish-dielectric_thickness_start)/(dielectric_thickness_data_points)
 dielectric_thickness = []
@@ -75,13 +76,28 @@ for i in range(dielectric_thickness_data_points):
     dielectric_thickness.append(dielectric_thickness_start+i*dielectric_step)
 dielectric_thickness.append(dielectric_thickness_finish)
 
-t = Intensity(n1air,400,550)
-u = Intensity(n1graphite,400,550)
+#dielectric_thickness = [270]
 
-Final = np.array([])
+Final = np.empty(len(wavelength),)
 for i in range(len(dielectric_thickness)):
     run = np.array([])
     for j in range(len(wavelength)):
         C = Contrast(n1graphite,wavelength[j],dielectric_thickness[i])
-        run = np.append(run,C)
-    Final = np.append(Final, run)
+        run = np.append(run,[C])
+    Final = np.vstack((Final, run))
+Final = np.delete(Final, 0, axis=0)
+#Final = np.transpose(Final)
+
+figure1, axes1 = plt.subplots()
+contourplot = axes1.contourf( wavelength, dielectric_thickness, Final)
+figure1.colorbar(contourplot)
+axes1.set_xlabel('Wavelength (nm)')
+axes1.set_ylabel('Dielectric_Thickness (nm)')
+
+'''
+figure2, axes2 = plt.subplots()
+axes2.plot(wavelength,Final[215,])
+axes2.set_xlabel('Wavelength (nm)')
+axes2.set_ylabel('Contrast (-)')
+'''
+plt.show
